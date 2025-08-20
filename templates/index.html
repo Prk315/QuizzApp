@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <h1>Knowledge</h1>
+  <p class="tagline">Distill. Practice. Master.</p>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="dashboard-grid">
+  
+  <!-- Step 1: Source -->
+  <div class="dashboard-card">
+    <div class="step-header">
+      <span class="step-number">01</span>
+      <h3>Source</h3>
+    </div>
+    <p class="step-description">Retrieve notes from your knowledge base</p>
+    <form method="get" action="/debug/notion" target="_blank">
+      <button class="btn btn-primary" type="submit">
+        Fetch Notes
+      </button>
+    </form>
+    {% if preview_notes %}
+      <div class="status-indicator">
+        <span class="status-dot active"></span>
+        <span class="status-text">Connected</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Step 2: Transform -->
+  <div class="dashboard-card">
+    <div class="step-header">
+      <span class="step-number">02</span>
+      <h3>Transform</h3>
+    </div>
+    <p class="step-description">Generate learning materials through AI</p>
+    
+    <form method="post" action="/generate" class="generation-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="difficulty">Difficulty</label>
+          <select name="difficulty" id="difficulty" class="form-control">
+            <option value="balanced">Balanced</option>
+            <option value="easy">Easy</option>
+            <option value="exam-hard">Exam Hard</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="focus">Focus</label>
+          <input type="text" name="focus" id="focus" class="form-control" 
+                 placeholder="Optional topic focus">
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" type="submit">
+        Generate
+      </button>
+    </form>
+  </div>
+
+  <!-- Step 3: Practice -->
+  {% if generated %}
+  <div class="dashboard-card">
+    <div class="step-header">
+      <span class="step-number">03</span>
+      <h3>Practice</h3>
+    </div>
+    <p class="step-description">Choose your learning method</p>
+    
+    <div class="practice-grid">
+      <form method="get" action="/quiz/mcq">
+        <button class="practice-btn" type="submit">
+          <div class="practice-content">
+            <div class="practice-icon">Q</div>
+            <div class="practice-label">Questions</div>
+          </div>
+        </button>
+      </form>
+      
+      <form method="get" action="/quiz/flashcards">
+        <button class="practice-btn" type="submit">
+          <div class="practice-content">
+            <div class="practice-icon">F</div>
+            <div class="practice-label">Flashcards</div>
+          </div>
+        </button>
+      </form>
+      
+      <form method="get" action="/mock-exam">
+        <button class="practice-btn" type="submit">
+          <div class="practice-content">
+            <div class="practice-icon">E</div>
+            <div class="practice-label">Exam</div>
+          </div>
+        </button>
+      </form>
+    </div>
+    
+    <details class="generated-details">
+      <summary>Raw Output</summary>
+      <pre class="json-preview">{{ generated|tojson(indent=2) }}</pre>
+    </details>
+  </div>
+  {% else %}
+  <div class="dashboard-card inactive">
+    <div class="step-header">
+      <span class="step-number">03</span>
+      <h3>Practice</h3>
+    </div>
+    <p class="step-description">Generate content to unlock practice modes</p>
+    <div class="placeholder-state">
+      <div class="placeholder-icon">—</div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Notes Section -->
+{% if preview_notes %}
+<div class="notes-section">
+  <h4>Source Material</h4>
+  <div class="notes-content">
+    {{ preview_notes }}
+  </div>
+</div>
+{% endif %}
+
+<style>
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #f5f5f5;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.tagline {
+  font-size: 0.9rem;
+  color: #808080;
+  margin: 0;
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  width: 100%;
+}
+
+.dashboard-card {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  padding: 2rem;
+  transition: border-color 0.15s ease;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dashboard-card:hover {
+  border-color: #404040;
+}
+
+.dashboard-card.inactive {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  color: #808080;
+  border: 1px solid #404040;
+  border-radius: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 300;
+  margin-right: 1rem;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.dashboard-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f0f0f0;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.step-description {
+  color: #b0b0b0;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 300;
+  color: #d0d0d0;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid #404040;
+  border-radius: 1px;
+  font-size: 0.9rem;
+  background: #2a2a2a;
+  color: #f0f0f0;
+  transition: all 0.15s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #606060;
+  background: #333;
+}
+
+.btn-primary {
+  background: #2a2a2a;
+  color: #f5f5f5;
+  border: 1px solid #404040;
+  padding: 1rem 2rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+
+.btn-primary:hover {
+  background: #404040;
+  border-color: #606060;
+}
+
+.status-indicator {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #404040;
+}
+
+.status-dot.active {
+  background: #808080;
+}
+
+.status-text {
+  color: #b0b0b0;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.practice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  max-width: 100%;
+}
+
+.practice-btn {
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.practice-btn:hover {
+  border-color: #404040;
+  background: #1a1a1a;
+}
+
+.practice-content {
+  text-align: center;
+}
+
+.practice-icon {
+  font-size: 1.5rem;
+  color: #808080;
+  margin-bottom: 0.5rem;
+  font-weight: 300;
+}
+
+.practice-label {
+  font-size: 0.75rem;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.placeholder-state {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  color: #404040;
+  font-weight: 100;
+}
+
+.notes-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #2a2a2a;
+}
+
+.notes-section h4 {
+  color: #d0d0d0;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.notes-content {
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  padding: 2rem;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #b0b0b0;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.generated-details {
+  margin-top: 2rem;
+  border-top: 1px solid #2a2a2a;
+  padding-top: 1rem;
+}
+
+.generated-details summary {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #808080;
+  font-weight: 300;
+}
+
+.json-preview {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  padding: 1.5rem;
+  font-size: 0.75rem;
+  max-height: 400px;
+  overflow: auto;
+  margin-top: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .practice-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .dashboard-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
+  
+  .container {
+    padding: 2rem 1.5rem;
+  }
+  
+  body {
+    padding: 1rem;
+  }
+}
+</style>
+
+{% endblock %}

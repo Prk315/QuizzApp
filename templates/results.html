@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h3>Results</h3>
+  <p><strong>Score:</strong> {{ score }} / {{ total }}</p>
+</div>
+
+{% for r in review %}
+  <div class="card">
+    <strong>Q{{ loop.index }}.</strong> {{ r.q }}
+    <div>Your answer: {{ r.your_answer_text }}</div>
+    <div>Correct answer: {{ r.correct_answer_text }}</div>
+    {% if r.explanation %}
+      <details><summary>Explanation</summary><p>{{ r.explanation }}</p></details>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<a class="btn btn-secondary" href="/">Back</a>
+{% endblock %}

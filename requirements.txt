@@ -1,0 +1,12 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+notion-client==2.2.1
+openai==1.100.1
+
+#
+#python -m venv .venv
+#source .venv/bin/activate     # Windows: .venv\Scripts\activate
+#pip install -r requirements.txt
+#export FLASK_SECRET="something-random"  # or in .env already
+#flask --app app.py run
+#

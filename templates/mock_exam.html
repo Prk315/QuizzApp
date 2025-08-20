@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h3>{{ mock.title }}</h3>
+  {% for q in mock.questions %}
+    <div class="card">
+      <strong>{{ loop.index }}.</strong>
+      {% if q.type == "mcq" %}
+        {{ q.q }}
+        <ul>
+          {% for c in q.choices %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+        <details><summary>Answer</summary><p>{{ q.choices[q.answer_index] }}</p></details>
+      {% elif q.type == "short" %}
+        {{ q.q }}
+        {% if q.expected_points %}
+          <details><summary>Expected points</summary>
+            <ul>
+            {% for p in q.expected_points %}<li>{{ p }}</li>{% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endfor %}
+  <a class="btn btn-secondary" href="/">Back</a>
+</div>
+{% endblock %}

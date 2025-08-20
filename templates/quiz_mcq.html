@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h3>MCQ Quiz</h3>
+  <form method="post">
+    {% for i, q in enumerate(mcqs) %}
+      <div class="card">
+        <strong>Q{{ i+1 }}.</strong> {{ q.q }}
+        {% for j, c in enumerate(q.choices) %}
+          <div class="choice">
+            <label>
+              <input type="radio" name="q{{ i }}" value="{{ j }}" required>
+              {{ c }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    <button class="btn" type="submit">Submit</button>
+  </form>
+</div>
+{% endblock %}

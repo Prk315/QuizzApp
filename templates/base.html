@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ title or "Notion Quiz Generator" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+      margin: 0; 
+      padding: 2rem;
+      background: #0a0a0a;
+      min-height: 100vh;
+      line-height: 1.6;
+      color: #e5e5e5;
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      background: #1a1a1a;
+      border-radius: 2px;
+      padding: 3rem;
+      border: 1px solid #2a2a2a;
+    }
+    
+    header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 3rem; 
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    
+    header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #f5f5f5;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+    
+    .card { 
+      border: 1px solid #2a2a2a; 
+      border-radius: 1px; 
+      padding: 2rem; 
+      margin: 1.5rem 0; 
+      background: #161616;
+    }
+    
+    .btn { 
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #404040; 
+      padding: 0.875rem 1.75rem; 
+      border-radius: 1px; 
+      background: #2a2a2a; 
+      color: #f5f5f5; 
+      cursor: pointer; 
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+      letter-spacing: 0.25px;
+    }
+    
+    .btn:hover {
+      background: #404040;
+      border-color: #606060;
+    }
+    
+    .btn-secondary { 
+      background: #1a1a1a; 
+      border-color: #2a2a2a;
+      color: #d0d0d0; 
+    }
+    
+    .btn-secondary:hover {
+      background: #2a2a2a;
+      border-color: #404040;
+    }
+    
+    pre { 
+      background: #0f0f0f; 
+      padding: 1.5rem; 
+      border-radius: 1px; 
+      overflow: auto; 
+      border: 1px solid #2a2a2a;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #b0b0b0;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    }
+    
+    .choice { 
+      margin: 0.75rem 0; 
+      padding: 0.75rem;
+      border-radius: 1px;
+      transition: background-color 0.15s ease;
+      border: 1px solid transparent;
+    }
+    
+    .choice:hover {
+      background: #222;
+      border-color: #333;
+    }
+    
+    .choice label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      width: 100%;
+      color: #e0e0e0;
+    }
+    
+    .choice input[type="radio"] {
+      margin-right: 1rem;
+      transform: scale(1.1);
+      accent-color: #666;
+    }
+    
+    .muted { 
+      color: #808080; 
+      font-size: 0.85rem;
+    }
+    
+    details { 
+      margin-top: 1.5rem; 
+    }
+    
+    details summary {
+      cursor: pointer;
+      padding: 0.75rem;
+      background: #0f0f0f;
+      border-radius: 1px;
+      border: 1px solid #2a2a2a;
+      font-weight: 400;
+      color: #d0d0d0;
+      letter-spacing: 0.25px;
+    }
+    
+    details summary:hover {
+      background: #1a1a1a;
+    }
+    
+    details[open] summary {
+      border-bottom: none;
+    }
+    
+    details[open] > *:not(summary) {
+      border: 1px solid #2a2a2a;
+      border-top: none;
+      padding: 1.5rem;
+      margin: 0;
+      background: #0f0f0f;
+    }
+    
+    h3, h4 {
+      color: #f0f0f0;
+      margin-top: 0;
+      font-weight: 400;
+      letter-spacing: 0.25px;
+    }
+    
+    form {
+      margin: 0;
+    }
+    
+    select, input[type="text"] {
+      padding: 0.75rem;
+      border: 1px solid #404040;
+      border-radius: 1px;
+      font-size: 0.9rem;
+      background: #2a2a2a;
+      color: #f0f0f0;
+    }
+    
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #606060;
+      background: #333;
+    }
+    
+    ::placeholder {
+      color: #808080;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h2>QUIZ</h2>
+    <div class="muted">{{ subtitle or "Transform notes into knowledge" }}</div>
+  </header>
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

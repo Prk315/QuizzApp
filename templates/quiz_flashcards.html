@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flashcard-container">
+  <div class="flashcard-header">
+    <h3>Flashcards</h3>
+    <div class="flashcard-counter">
+      <span id="current-card">1</span> / <span id="total-cards">{{ flashcards|length }}</span>
+    </div>
+  </div>
+
+  <div class="flashcard-deck" id="flashcard-deck">
+    {% for i, fc in enumerate(flashcards) %}
+      <div class="flashcard {{ 'active' if i == 0 else 'hidden' }}" data-index="{{ i }}">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <div class="flashcard-content">
+              <div class="card-number">{{ i+1 }}</div>
+              <div class="question">{{ fc.q }}</div>
+              <div class="flip-hint">Click to reveal answer</div>
+            </div>
+          </div>
+          <div class="flashcard-back">
+            <div class="flashcard-content">
+              <div class="card-number">{{ i+1 }}</div>
+              <div class="answer">{{ fc.a }}</div>
+              <div class="flip-hint">Click to see question</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flashcard-actions">
+          <button class="action-btn remove-btn" onclick="removeCard({{ i }})">
+            <span class="action-icon">✕</span>
+            <span class="action-label">Remove</span>
+          </button>
+          <button class="action-btn save-btn" onclick="saveCard({{ i }})">
+            <span class="action-icon">⭐</span>
+            <span class="action-label">Save</span>
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="flashcard-navigation">
+    <button class="nav-btn" id="prev-btn" onclick="previousCard()">
+      <span class="nav-icon">‹</span>
+      <span class="nav-label">Previous</span>
+    </button>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    
+    <button class="nav-btn" id="next-btn" onclick="nextCard()">
+      <span class="nav-label">Next</span>
+      <span class="nav-icon">›</span>
+    </button>
+  </div>
+
+  <div class="flashcard-footer">
+    <a class="btn btn-secondary" href="/">Back to Dashboard</a>
+    <button class="btn btn-primary" onclick="showSavedCards()">View Saved Cards</button>
+  </div>
+</div>
+
+<!-- Saved Cards Modal -->
+<div class="modal" id="saved-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4>Saved Flashcards</h4>
+      <button class="close-btn" onclick="closeSavedModal()">✕</button>
+    </div>
+    <div class="modal-body" id="saved-cards-list">
+      <!-- Saved cards will be populated here -->
+    </div>
+  </div>
+</div>
+
+<style>
+.flashcard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.flashcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.flashcard-header h3 {
+  margin: 0;
+  color: #f0f0f0;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.flashcard-counter {
+  color: #808080;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.flashcard-deck {
+  position: relative;
+  height: 400px;
+  margin-bottom: 2rem;
+  perspective: 1000px;
+}
+
+.flashcard {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.flashcard.hidden {
+  opacity: 0;
+  transform: translateX(100px);
+  pointer-events: none;
+}
+
+.flashcard.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+  cursor: pointer;
+}
+
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: #1a1a1a;
+}
+
+.flashcard-content {
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+  position: relative;
+}
+
+.card-number {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  color: #404040;
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+.question {
+  font-size: 1.2rem;
+  color: #f0f0f0;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+.answer {
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+.flip-hint {
+  color: #606060;
+  font-size: 0.8rem;
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  letter-spacing: 0.5px;
+}
+
+.flashcard-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 1px;
+  color: #d0d0d0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.85rem;
+}
+
+.action-btn:hover {
+  background: #404040;
+  border-color: #606060;
+}
+
+.remove-btn:hover {
+  background: #4a2a2a;
+  border-color: #8a4a4a;
+  color: #ffaaaa;
+}
+
+.save-btn:hover {
+  background: #4a4a2a;
+  border-color: #8a8a4a;
+  color: #ffffaa;
+}
+
+.action-icon {
+  font-size: 0.9rem;
+}
+
+.action-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flashcard-navigation {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 1px;
+  color: #d0d0d0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.85rem;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #404040;
+  border-color: #606060;
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+.nav-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #606060;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.flashcard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1px solid #2a2a2a;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.modal-header h4 {
+  margin: 0;
+  color: #f0f0f0;
+  font-weight: 300;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #808080;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.close-btn:hover {
+  color: #d0d0d0;
+}
+
+.saved-card-item {
+  padding: 1rem;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 1px;
+  margin-bottom: 1rem;
+}
+
+.saved-card-question {
+  color: #f0f0f0;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.saved-card-answer {
+  color: #d0d0d0;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .flashcard-container {
+    padding: 1rem;
+  }
+  
+  .flashcard-deck {
+    height: 300px;
+  }
+  
+  .flashcard-inner {
+    height: 250px;
+  }
+  
+  .flashcard-content {
+    padding: 1.5rem;
+  }
+  
+  .question {
+    font-size: 1rem;
+  }
+  
+  .answer {
+    font-size: 0.95rem;
+  }
+  
+  .flashcard-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .flashcard-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+</style>
+
+<script>
+let currentCardIndex = 0;
+let totalCards = {{ flashcards|length }};
+let savedCards = JSON.parse(localStorage.getItem('savedFlashcards') || '[]');
+let flashcardsData = {{ flashcards|tojson }};
+
+function updateCardDisplay() {
+  const cards = document.querySelectorAll('.flashcard');
+  cards.forEach((card, index) => {
+    card.classList.toggle('active', index === currentCardIndex);
+    card.classList.toggle('hidden', index !== currentCardIndex);
+    card.classList.remove('flipped');
+  });
+  
+  document.getElementById('current-card').textContent = currentCardIndex + 1;
+  document.getElementById('prev-btn').disabled = currentCardIndex === 0;
+  document.getElementById('next-btn').disabled = currentCardIndex === totalCards - 1;
+  
+  const progress = ((currentCardIndex + 1) / totalCards) * 100;
+  document.getElementById('progress-fill').style.width = progress + '%';
+}
+
+function nextCard() {
+  if (currentCardIndex < totalCards - 1) {
+    currentCardIndex++;
+    updateCardDisplay();
+  }
+}
+
+function previousCard() {
+  if (currentCardIndex > 0) {
+    currentCardIndex--;
+    updateCardDisplay();
+  }
+}
+
+function removeCard(index) {
+  if (confirm('Remove this flashcard from the current session?')) {
+    const cardElement = document.querySelector(`[data-index="${index}"]`);
+    cardElement.style.opacity = '0';
+    cardElement.style.transform = 'translateX(-100px)';
+    
+    setTimeout(() => {
+      cardElement.style.display = 'none';
+      
+      // Adjust current index if needed
+      if (index < currentCardIndex) {
+        currentCardIndex--;
+      } else if (index === currentCardIndex && currentCardIndex === totalCards - 1) {
+        currentCardIndex = Math.max(0, currentCardIndex - 1);
+      }
+      
+      totalCards--;
+      document.getElementById('total-cards').textContent = totalCards;
+      
+      if (totalCards === 0) {
+        document.querySelector('.flashcard-deck').innerHTML = '<div style="text-align: center; color: #808080; padding: 2rem;">No more flashcards</div>';
+      } else {
+        updateCardDisplay();
+      }
+    }, 300);
+  }
+}
+
+function saveCard(index) {
+  const card = flashcardsData[index];
+  const savedCard = {
+    id: Date.now() + index,
+    question: card.q,
+    answer: card.a,
+    savedAt: new Date().toISOString()
+  };
+  
+  savedCards.push(savedCard);
+  localStorage.setItem('savedFlashcards', JSON.stringify(savedCards));
+  
+  // Visual feedback
+  const saveBtn = document.querySelector(`[data-index="${index}"] .save-btn`);
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = '<span class="action-icon">✓</span><span class="action-label">Saved</span>';
+  saveBtn.style.background = '#2a4a2a';
+  
+  setTimeout(() => {
+    saveBtn.innerHTML = originalText;
+    saveBtn.style.background = '#2a2a2a';
+  }, 1500);
+}
+
+function showSavedCards() {
+  const modal = document.getElementById('saved-modal');
+  const savedCardsList = document.getElementById('saved-cards-list');
+  
+  if (savedCards.length === 0) {
+    savedCardsList.innerHTML = '<div style="text-align: center; color: #808080; padding: 2rem;">No saved cards yet</div>';
+  } else {
+    savedCardsList.innerHTML = savedCards.map(card => `
+      <div class="saved-card-item">
+        <div class="saved-card-question">${card.question}</div>
+        <div class="saved-card-answer">${card.answer}</div>
+      </div>
+    `).join('');
+  }
+  
+  modal.style.display = 'block';
+}
+
+function closeSavedModal() {
+  document.getElementById('saved-modal').style.display = 'none';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  updateCardDisplay();
+  
+  // Add click handlers for flipping cards
+  document.querySelectorAll('.flashcard-inner').forEach(card => {
+    card.addEventListener('click', function() {
+      this.parentElement.classList.toggle('flipped');
+    });
+  });
+  
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') previousCard();
+    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === ' ') {
+      e.preventDefault();
+      document.querySelector('.flashcard.active .flashcard-inner').click();
+    }
+  });
+  
+  // Close modal when clicking outside
+  document.getElementById('saved-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSavedModal();
+  });
+});
+</script>
+
+{% endblock %}

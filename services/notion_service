@@ -1,0 +1,96 @@
+import os
+from notion_client import Client
+
+class NotionService:
+    def __init__(self):
+        self.client = Client(auth=os.environ["NOTION_SECRET"])
+        self.database_id = os.environ["NOTION_DATABASE_ID"]
+        self.TITLE_PROP = os.getenv("NOTION_TITLE_PROP", "Name")
+        self.NOTES_PROP = os.getenv("NOTION_NOTES_PROP", "Summary")
+
+    def fetch_all_notes_text(self) -> str:
+        """
+        Collects text from:
+        1) the NOTES_PROP (rich_text or title), and
+        2) the full page body blocks (paragraphs, headings, lists, callouts, toggles, quotes, code)
+        for every page in the database. Handles pagination + nested blocks.
+        """
+        parts = []
+        cursor = None
+        while True:
+            resp = self.client.databases.query(
+                database_id=self.database_id,
+                start_cursor=cursor
+            )
+            for page in resp["results"]:
+                page_id = page["id"]
+
+                # --- 1) property text (e.g., Summary)
+                props = page.get("properties", {})
+                p = props.get(self.NOTES_PROP)
+                if p:
+                    t = p.get("type")
+                    if t in ("rich_text", "title"):
+                        blocks = p[t]
+                        txt = "".join([b.get("plain_text", "") for b in blocks]).strip()
+                        if txt:
+                            parts.append(txt)
+
+                # --- 2) full page body text (recursive)
+                parts.append(self._extract_page_text(page_id))
+
+            if not resp.get("has_more"):
+                break
+            cursor = resp.get("next_cursor")
+
+        # Join and return
+        merged = "\n\n".join([x for x in parts if x]).strip()
+        return merged
+
+    # ---------- helpers ----------
+
+    def _extract_page_text(self, page_id: str) -> str:
+        out = []
+        for block in self._iter_blocks(page_id):
+            text = self._block_to_text(block)
+            if text:
+                out.append(text)
+        return "\n".join(out).strip()
+
+    def _iter_blocks(self, block_id: str):
+        """Yield all blocks under block_id, recursively (handles pagination)."""
+        start_cursor = None
+        while True:
+            resp = self.client.blocks.children.list(block_id=block_id, start_cursor=start_cursor)
+            for b in resp.get("results", []):
+                yield b
+                # dive into children if the block has them (toggle, list item, etc.)
+                if b.get("has_children"):
+                    yield from self._iter_blocks(b["id"])
+            if not resp.get("has_more"):
+                break
+            start_cursor = resp.get("next_cursor")
+
+    def _rich_text_plain(self, rich_text: list) -> str:
+        return "".join([r.get("plain_text", "") for r in (rich_text or [])]).strip()
+
+    def _block_to_text(self, b: dict) -> str:
+        t = b.get("type")
+        if not t:
+            return ""
+        data = b.get(t, {})
+
+        # Common text containers
+        if t in ("paragraph", "heading_1", "heading_2", "heading_3",
+                 "callout", "quote", "toggle", "to_do", "bulleted_list_item",
+                 "numbered_list_item"):
+            return self._rich_text_plain(data.get("rich_text", []))
+
+        # Code block
+        if t == "code":
+            code = self._rich_text_plain(data.get("rich_text", []))
+            lang = data.get("language", "")
+            return f"[code {lang}]\\n{code}" if code else ""
+
+        # Divider / unsupported types → skip text
+        return ""
